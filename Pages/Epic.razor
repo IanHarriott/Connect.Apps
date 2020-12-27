@@ -1,0 +1,102 @@
+@page "/epic"
+@inject HttpClient Http
+
+<div class="epic-container p-2">
+    <h1 class="text-center">EPIC Identifier Search</h1>
+
+    <div class="container">
+        @if (notFound){
+            <div class="alert alert-danger">
+                No record found.
+            </div>
+        }
+        <div class="input-group col-md-6 offset-md-3">
+            <span class="align-self-center mr-1">Enter Epic ID:</span>
+            <input class="form-control" placeholder="Enter epic id" @bind="searchEpicID" />
+            <div class="input-group-append">
+                <button class="btn btn-primary ml-1" @onclick="SearchID">Search Epic ID</button>
+            </div>
+        </div>
+        @if (record != null && record.EpicOrderIdentifier != "")
+        {
+            <table class="table mt-1 epic-table">
+                <thead>
+                    <tr>
+                        <th>Referral ID</th>
+                        <th>Request ID</th>
+                        <th>AuthNo</th>
+                        <th>IPA</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <td>
+                        <div class="input-group">
+                            <input class="form-control" @bind="epicID"/>
+                            <div class="ml-1">
+                                <button class="btn" @onclick="SaveID"><i class="oi oi-pencil"></i></button>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="epic-td">
+                            @record.AuthRequestID
+                        </div>
+                        <p></p></td>
+                    <td>
+                        <div class="epic-td">
+                            @record.AuthNo
+                        </div>
+                    </td>
+                    <td>
+                        <div class="epic-td">
+                            @record.Ipa
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private StagingRecord record;
+    private string searchEpicID = "";
+    private string epicID = "";
+    private bool notFound = false;
+
+    private async Task<HttpResponseMessage> SearchID()
+    {
+        notFound = false;
+        if(searchEpicID == "")
+        {
+            notFound = true;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        }
+
+        StagingRecord[] records = await Http.GetFromJsonAsync<StagingRecord[]>("sample-data/epic.json");
+
+        record = records.FirstOrDefault(x => x.EpicOrderIdentifier == searchEpicID);
+        if (record == null){
+            notFound = true;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        }
+        if (record.EpicOrderIdentifier != "" ) {
+            epicID = record.EpicOrderIdentifier;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        }
+        return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError);
+    }
+
+    private async Task<HttpResponseMessage> SaveID()
+    {
+        //Update the EpicOrderIdentifier to be epicID variable
+        StagingRecord[] records = await Http.GetFromJsonAsync<StagingRecord[]>("sample-data/epic.json");
+        records.First(x => x.EpicOrderIdentifier == record.EpicOrderIdentifier).EpicOrderIdentifier = epicID;
+        //Turn the records back into a json
+        var json = JsonSerializer.Serialize(records);
+        //Post the json
+        return await Http.PostAsJsonAsync("sample-data/savedepic.json", json);
+
+        @* return new HttpResponseMessage(System.Net.HttpStatusCode.OK); *@
+    }
+}
