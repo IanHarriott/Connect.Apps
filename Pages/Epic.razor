@@ -5,7 +5,8 @@
     <h1 class="text-center">EPIC Identifier Search</h1>
 
     <div class="container">
-        @if (notFound){
+        @if (notFound)
+        {
             <div class="alert alert-danger">
                 No record found.
             </div>
@@ -13,7 +14,7 @@
         <div class="input-group col-md-6 offset-md-3">
             <span class="align-self-center mr-1">Enter Epic ID:</span>
             <input class="form-control" placeholder="Enter epic id" @bind="searchEpicID" />
-            <div class="input-group-append">
+            <div>
                 <button class="btn btn-primary ml-1" @onclick="SearchID">Search Epic ID</button>
             </div>
         </div>
@@ -31,7 +32,7 @@
                 <tr>
                     <td>
                         <div class="input-group">
-                            <input class="form-control" @bind="epicID"/>
+                            <input class="form-control" @bind="epicID" />
                             <div class="ml-1">
                                 <button class="btn" @onclick="SaveID"><i class="oi oi-pencil"></i></button>
                             </div>
@@ -41,7 +42,8 @@
                         <div class="epic-td">
                             @record.AuthRequestID
                         </div>
-                        <p></p></td>
+                        <p></p>
+                    </td>
                     <td>
                         <div class="epic-td">
                             @record.AuthNo
@@ -67,7 +69,7 @@
     private async Task<HttpResponseMessage> SearchID()
     {
         notFound = false;
-        if(searchEpicID == "")
+        if (searchEpicID == "")
         {
             notFound = true;
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
@@ -76,11 +78,13 @@
         StagingRecord[] records = await Http.GetFromJsonAsync<StagingRecord[]>("sample-data/epic.json");
 
         record = records.FirstOrDefault(x => x.EpicOrderIdentifier == searchEpicID);
-        if (record == null){
+        if (record == null)
+        {
             notFound = true;
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
         }
-        if (record.EpicOrderIdentifier != "" ) {
+        if (record.EpicOrderIdentifier != "")
+        {
             epicID = record.EpicOrderIdentifier;
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         }

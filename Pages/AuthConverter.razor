@@ -1,3 +1,96 @@
 @page "/authconverter"
+@inject HttpClient Http
 
-<h1>AuthConverter</h1>
+@if (notFound)
+{
+    <div class="alert alert-danger">
+    No records found.
+</div>
+}
+<div class="referral-search">
+    <div class="search-header p-3">
+        <span class="header-text">Epic Referral Search</span>
+    </div>
+    <hr class="search-line">
+    <div class="search-body">
+        <div class="search-input p-3">
+            <span>Member MRN</span>
+            <div class="input-group">
+                <input class="form-control col-md-9" placeholder="Enter member mrn" @bind="searchMemberMRN" />
+                <div class="col-md-3">
+                    <button id="search-button" class="btn btn-primary ml-1" @onclick="SearchMRN">SEARCH</button>
+                </div>
+            </div>
+        </div>
+        <hr class="search-line">
+        @if (referrals != null && referrals.Length > 0)
+        {
+            <div class="search-results">
+                <table class="table table-borderless search-table">
+                    <thead>
+                        <tr class="search-table-row">
+                            <td>Date</td>
+                            <td>Referral</td>
+                            <td>Specialty</td>
+                            <td>Member</td>
+                        </tr>
+                    </thead>
+                    @foreach (var referral in referrals)
+                    {
+                        <tr class="search-table-row">
+                            <td>
+                                <span class="search-span">@referral.CreateDate</span>
+                            </td>
+                            <td>
+                                <a class="btn search-button"
+                                    href="/authconverter/@referral.EpicReferralID">@referral.EpicReferralID</a>
+                            </td>
+                            <td>
+                                <span class="search-span">@referral.ReqProvSpecDesc</span>
+                            </td>
+                            <td>
+                                <span class="search-span">@referral.MemberLName, @referral.MemberFName</span>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private EpicReferral[] referrals;
+    private string searchMemberMRN;
+    private bool notFound = false;
+
+    private async Task<HttpResponseMessage> SearchMRN()
+    {
+        notFound = false;
+        if (searchMemberMRN == "")
+        {
+            notFound = true;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        }
+
+        EpicReferral[] referralList = await Http.GetFromJsonAsync<EpicReferral[]>("sample-data/authconverter.json");
+
+        if (referralList.Length == 0)
+        {
+            notFound = true;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        }
+        if (referralList.Length > 0)
+        {
+            referrals = referralList.Where(x => x.MemberMRN == searchMemberMRN).ToArray();
+            if (referrals.Length == 0)
+            {
+                notFound = true;
+                return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+            }
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        }
+
+        return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError);
+    }
+}
